@@ -37,11 +37,25 @@ jobs:
       - name: Build frontend
         run: nix develop --command bash -c "pnpm build:wasm && pnpm build"
 
+      - name: Install native iOS toolchain
+        run: |
+          brew install xcodegen cocoapods
+          if ! command -v rustup >/dev/null 2>&1; then
+            curl https://sh.rustup.rs -sSf | sh -s -- -y --profile minimal
+          fi
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          export PATH="$HOME/.cargo/bin:$PATH"
+          rustup target add aarch64-apple-ios
+          rustup override set stable
+          if [ -x /nix/var/nix/profiles/default/bin/nix ]; then
+            sudo mv /nix/var/nix/profiles/default/bin/nix /nix/var/nix/profiles/default/bin/nix.disabled
+          fi
+
       - name: Generate Xcode project
-        run: nix develop .#ios --command pnpm tauri ios init
+        run: pnpm tauri ios init
 
       - name: Build unsigned app
-        run: nix develop .#ios --command pnpm tauri ios build --no-sign
+        run: pnpm tauri ios build --no-sign
 
       - name: Package
         shell: bash
