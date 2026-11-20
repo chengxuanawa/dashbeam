@@ -146,12 +146,14 @@ fn path_type_from_mime(mime: Option<&str>) -> Option<TransferPathType> {
 
 impl EventEmitter for TauriEventEmitter {
     fn emit_event(&self, event_name: &str) -> Result<(), String> {
+        crate::background_task::observe(event_name, None);
         self.app_handle
             .emit(event_name, ())
             .map_err(|e| e.to_string())
     }
 
     fn emit_event_with_payload(&self, event_name: &str, payload: &str) -> Result<(), String> {
+        crate::background_task::observe(event_name, Some(payload));
         self.app_handle
             .emit(event_name, payload)
             .map_err(|e| e.to_string())
@@ -441,6 +443,9 @@ pub async fn stop_sharing(state: State<'_, AppStateMutex>) -> Result<(), String>
         node.stop_pairing_host().await;
     }
 
+    // Stopping mid-transfer emits no terminal engine event.
+    crate::background_task::force_finish_sender(false);
+
     Ok(())
 }
 
@@ -565,6 +570,11 @@ pub async fn receive_file(
     }
 
     let result = download(ticket, options, boxed_handle, cancel_rx).await;
+
+    // A failed or cancelled download may never emit `receive-completed`.
+    if result.is_err() {
+        crate::background_task::force_finish_receiver(false);
+    }
 
     // Update state based on outcome.
     {
@@ -907,6 +917,7 @@ pub async fn cancel_receive(state: State<'_, AppStateMutex>) -> Result<(), Strin
         // already gone (download finished first) this is a harmless no-op.
         let _ = tx.send(());
     }
+    crate::background_task::force_finish_receiver(false);
     Ok(())
 }
 

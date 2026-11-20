@@ -10,6 +10,7 @@ mod autostart;
 // so this module can only compile on Linux even when the feature is enabled.
 #[cfg(all(desktop, target_os = "linux", feature = "autostart-portal"))]
 mod autostart_portal;
+mod background_task;
 mod commands;
 mod features;
 mod history;
@@ -444,6 +445,7 @@ fn init_logging(app: &tauri::AppHandle) {
 
 #[allow(unused_variables)]
 fn setup_common(app: &tauri::App) {
+    background_task::register();
     cleanup_orphaned_directories();
     init_transfer_history(app);
     tracing::debug!("File drop support enabled via dragDropEnabled config");

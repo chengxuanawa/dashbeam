@@ -75,6 +75,7 @@ targets:
     sources:
       - path: Sources
       - path: ../../ios/Assets.xcassets
+      - path: ../../ios/BackgroundTask
       # Exclude built static libs: regenerating with xcodegen after a build
       # otherwise turns the per-configuration libapp.a copies into colliding
       # resources ("Multiple commands produce …/libapp.a"). They are linked
@@ -108,6 +109,8 @@ targets:
         NSLocalNetworkUsageDescription: "{{app.stylized-name}} connects directly to your devices on the same network to transfer files faster and find nearby devices."
         NSBonjourServices:
           - _irohv1._udp
+        BGTaskSchedulerPermittedIdentifiers:
+          - {{app.identifier}}.bg-transfer
         UIRequiredDeviceCapabilities: [arm64, metal]
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
