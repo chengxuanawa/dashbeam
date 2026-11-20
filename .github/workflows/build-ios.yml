@@ -35,7 +35,7 @@ jobs:
         run: pnpm install
 
       - name: Build frontend
-        run: nix develop .#ios --command bash -c "pnpm build:wasm && pnpm build"
+        run: nix develop --command bash -c "pnpm build:wasm && pnpm build"
 
       - name: Generate Xcode project
         run: nix develop .#ios --command pnpm tauri ios init
